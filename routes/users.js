@@ -31,4 +31,13 @@ router.delete('/deleteuser/:id', function(req, res) {
   });
 });
 
+/* POST to login. */
+router.post('/login', function(req, res) {
+  var email = req.body.emailId;
+  var role = email.match('renter') ? 'renter' :
+             email.match('landlord') ? 'landlord' :
+             email.match('repairer') ? 'repairer' : 'guest';
+  res.send({ role: role });
+});
+
 module.exports = router;
