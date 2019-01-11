@@ -20,8 +20,9 @@ router.post('/addrequest', function(req, res) {
     var now = Date.now();
     data.createdTime = now;
     data.updatedTime = now;
-
-    data.status = 'New';
+    var status = 'New';
+    data.status = status;
+    data.history = [{timestamp: now, status: status}];
 
     collection.insert(data, function(err, result){
       res.send(
@@ -39,22 +40,24 @@ router.get('/getrequest/:id', function(req, res) {
     });
   });
 
-/* POST to approverequest. */
-router.post('/approverequest/:id', function(req, res) {
+/* POST to updaterequeststatus. */
+router.post('/updaterequeststatus/:id', function(req, res) {
   var db = req.db;
   var collection = db.get('requests');
   var userToApprove = req.params.id;
-  collection.findOneAndUpdate({ '_id' : userToApprove }, {$set: {status: 'Approved'}}, function(err) {
-    res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
-  });
-});
+  var newStatus = req.body.newStatus;
+  var now = Date.now();
 
-/* POST to dismissrequest. */
-router.post('/dismissrequest/:id', function(req, res) {
-  var db = req.db;
-  var collection = db.get('requests');
-  var userToApprove = req.params.id;
-  collection.findOneAndUpdate({ '_id' : userToApprove }, {$set: {status: 'Dismissed'}}, function(err) {
+  collection.findOneAndUpdate({ '_id' : userToApprove }, {
+    $set: {
+    status: newStatus,
+    updatedTime: now
+  },
+    $push: {
+      history: {
+        $each: [{timestamp: now, status: newStatus}]
+      }
+    }}, function(err) {
     res.send((err === null) ? { msg: '' } : { msg:'error: ' + err });
   });
 });
